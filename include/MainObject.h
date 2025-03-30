@@ -1,6 +1,8 @@
 _Pragma("once");
+
 #include <QObject>
-#include <QWidget>
+
+#include "MainWidget.h"
 
 class MainObject : public QObject
 {
@@ -10,5 +12,5 @@ public:
     ~MainObject() = default;
 
 private:
-    QWidget w{};
+    MainWidget w{};
 };

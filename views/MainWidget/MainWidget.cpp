@@ -1,10 +1,17 @@
-_Pragma("once");
-#include <QWidget>
+#include "MainWidget.h"
 
-class MainWidget : public QWidget
+MainWidget::MainWidget(MainWindow* _parent) : MainWindow{_parent}
 {
-    Q_OBJECT
-public:
-    explicit(true) MainWidget(QWidget* _parent = nullptr);
-    ~MainWidget() = default;
-};
+    m_trayIcon->setIcon(QIcon(":/resources/application/icon.ico"));  // 使用资源中的图标
+    m_trayIcon->setToolTip("托盘示例");
+    // 绑定退出信号
+    connect(m_quitAction, &QAction::triggered, this, &MainWidget::close);
+
+    m_trayMenu->addAction(m_quitAction);
+
+    // 3. 绑定菜单到托盘图标
+    m_trayIcon->setContextMenu(m_trayMenu);
+
+    // 4. 显示托盘图标
+    m_trayIcon->show();
+}
