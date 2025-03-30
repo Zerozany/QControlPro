@@ -6,7 +6,7 @@ MainWidget::MainWidget(MainWindow* _parent) : MainWindow{_parent}
     m_trayIcon->setToolTip("托盘示例");
     // 绑定退出信号
     connect(m_quitAction, &QAction::triggered, this, &MainWidget::close);
-
+    m_quitAction->setIcon(QIcon{":/resources/application/icon.ico"});
     m_trayMenu->addAction(m_quitAction);
 
     // 3. 绑定菜单到托盘图标
