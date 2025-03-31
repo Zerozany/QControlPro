@@ -18,7 +18,7 @@ target_sources(${PROJECT_NAME}
     ${CMAKE_SOURCE_DIR}/resources/application/appicon.rc
 )
 
-qt_add_resources(${PROJECT_NAME}
+qt_add_resources(${PROJECT_NAME} "Main"
     PREFIX "/"
     FILES
     ${RESOURCES_LIST}

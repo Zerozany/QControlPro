@@ -3,9 +3,26 @@ file(GLOB SOURCE_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
 )
 
+file(GLOB RESOURCES_LIST 
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/*.css
+)
+
 set(MODEL_NAME MainWindow)
 
-add_library(${MODEL_NAME} STATIC ${SOURCE_FILES})
+add_library(${MODEL_NAME} STATIC)
+
+target_sources(
+    ${MODEL_NAME} 
+    PRIVATE
+    ${SOURCE_FILES}
+)
+
+qt_add_resources(${MODEL_NAME} "MainWindow"
+    PREFIX "/"
+    FILES
+    ${RESOURCES_LIST}
+)
 
 target_compile_features(${MODEL_NAME}
     PRIVATE
