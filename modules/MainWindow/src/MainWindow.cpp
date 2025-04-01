@@ -2,76 +2,34 @@
 
 MainWindow::MainWindow(QWidget* _parent, quint16 _height) : QWidget{_parent}, m_height{_height}
 {
-    this->setWindowFlags(Qt::FramelessWindowHint);
-    this->setAttribute(Qt::WA_TranslucentBackground);
+    Q_ASSERT_X(m_height > 0, "MainWindow", "Window's titlebar height must greater zero");
+    std::invoke(&MainWindow::setWindowConfig, this);
+}
+
+auto MainWindow::setWindowConfig() noexcept -> void
+{
     this->setMouseTracking(true);
-    std::invoke(&MainWindow::statusButtonLayout, this);
-    std::invoke(&MainWindow::setWindowProperty, this);
-    std::invoke(&MainWindow::setWindwoStyle, this, R"(:/resources/QToolButton.css)", R"(:/resources/QWidget.css)");
-}
-
-auto MainWindow::setWindowProperty() noexcept -> void
-{
-    this->setProperty("propertyName", "main-window");
-    m_widgetMaps["minWindow"]->setProperty("propertyName", "min-normal");
-    m_widgetMaps["normalWindow"]->setProperty("propertyName", "min-normal");
-    m_widgetMaps["closeWindow"]->setProperty("propertyName", "close");
-}
-
-auto MainWindow::setWindwoStyle(const QString& _buttonStyleString, const QString& _winStyleString) noexcept -> void
-{
-    QFile   buttonStyleFile{_buttonStyleString};
-    QFile   winStyleFile{_winStyleString};
-    QString styleSheet{};
-    if (!buttonStyleFile.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        qWarning() << "Failed to open style file:" << _buttonStyleString;
-        return;
-    }
-    QTextStream buttonStream{&buttonStyleFile};
-    styleSheet = buttonStream.readAll();
-    buttonStyleFile.close();
-    if (!winStyleFile.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        qWarning() << "Failed to open style file:" << _winStyleString;
-        return;
-    }
-    QTextStream winStream{&winStyleFile};
-    styleSheet += winStream.readAll();
-    winStyleFile.close();
-    this->setStyleSheet(styleSheet);
-    m_widgetMaps["minWindow"]->setStyleSheet(styleSheet);
-    m_widgetMaps["normalWindow"]->setStyleSheet(styleSheet);
-    m_widgetMaps["closeWindow"]->setStyleSheet(styleSheet);
-}
-
-auto MainWindow::statusButtonLayout() noexcept -> void
-{
-    m_widgetMaps["closeWindow"]->setGeometry(this->width() - MainSize::BUTTON_WIDTH, 0, MainSize::BUTTON_WIDTH, m_height);
-    m_widgetMaps["normalWindow"]->setGeometry(this->width() - (MainSize::BUTTON_WIDTH * 2), 0, MainSize::BUTTON_WIDTH, m_height);
-    m_widgetMaps["minWindow"]->setGeometry(this->width() - (MainSize::BUTTON_WIDTH * 3), 0, MainSize::BUTTON_WIDTH, m_height);
+    /// @brief 移除窗口的系统默认边框和标题栏
+    this->setWindowFlags(Qt::FramelessWindowHint);
+    /// @brief 设置窗口背景完全透明
+    this->setAttribute(Qt::WA_TranslucentBackground);
+    /// @brief 刷新窗口尺寸变化事件
+    this->resize(this->width(), this->height());
 }
 
 auto MainWindow::mousePressEvent(QMouseEvent* _event) -> void
 {
-    if ((_event->button() & Qt::LeftButton) && QRect{0, 0, this->width(), m_height}.contains(_event->pos()))
-    {
-        m_mouseHandle = true;
-        m_mousePoint  = _event->globalPos() - this->pos();
-    }
+    m_moveWidget->mousePress(_event);
 }
 
 auto MainWindow::mouseMoveEvent(QMouseEvent* _event) -> void
 {
-    if (m_mouseHandle)
-    {
-        this->move(_event->globalPos() - m_mousePoint);
-    }
+    m_moveWidget->mouseMove(_event);
 }
 
 auto MainWindow::mouseReleaseEvent(QMouseEvent* _event) -> void
 {
-    m_mouseHandle = false;
+    m_moveWidget->mouseRelease(_event);
 }
 
 auto MainWindow::paintEvent(QPaintEvent* _event) -> void
@@ -80,7 +38,8 @@ auto MainWindow::paintEvent(QPaintEvent* _event) -> void
     painter.setRenderHint(QPainter::Antialiasing);  // 抗锯齿
     // 1. 绘制圆角背景
     QPainterPath path{};
-    path.addRoundedRect(rect(), 5, 5);  // 5px圆角
+    // 5px圆角
+    path.addRoundedRect(rect(), 10, 10);
     // 填充背景色（替代样式表中的background-color）
     painter.fillPath(path, QColor("#FFFFFF"));
     // 2. 绘制边框（替代样式表中的border）
@@ -90,19 +49,11 @@ auto MainWindow::paintEvent(QPaintEvent* _event) -> void
 
 auto MainWindow::resizeEvent(QResizeEvent* _event) -> void
 {
-    m_widgetMaps["closeWindow"]->setGeometry(this->width() - MainSize::BUTTON_WIDTH, 0, MainSize::BUTTON_WIDTH, m_height);
-    m_widgetMaps["normalWindow"]->setGeometry(this->width() - (MainSize::BUTTON_WIDTH * 2), 0, MainSize::BUTTON_WIDTH, m_height);
-    m_widgetMaps["minWindow"]->setGeometry(this->width() - (MainSize::BUTTON_WIDTH * 3), 0, MainSize::BUTTON_WIDTH, m_height);
+    m_titleBarButton->resizeButtonLayout(_event, this, m_height);
 }
 
 auto MainWindow::mouseDoubleClickEvent(QMouseEvent* _event) -> void
 {
-    if (_event->button() == Qt::LeftButton)
-    {
-        if (QRect{0, 0, this->width(), m_height}.contains(_event->pos()))
-        {  // 检查是否在标题栏区域
-            this->isMaximized() ? showNormal() : showMaximized();
-        }
-    }
+    m_moveWidget->mouseDoubleClick(_event);
     QWidget::mouseDoubleClickEvent(_event);
 }

@@ -10,10 +10,8 @@ _Pragma("once");
 #include <functional>
 #include <map>
 
-namespace MainSize
-{
-    constexpr quint8 BUTTON_WIDTH{40};
-}
+#include "MoveWidget.h"
+#include "TitleBarButton.h"
 
 class MainWindow : public QWidget
 {
@@ -22,12 +20,8 @@ public:
     explicit(true) MainWindow(QWidget* _parent = nullptr, quint16 _height = 30);
     ~MainWindow() = default;
 
-    virtual auto setWindowProperty() noexcept -> void;
-
-    virtual auto setWindwoStyle(const QString& _buttonStyleString, const QString& _winStyleString) noexcept -> void;
-
 private:
-    auto statusButtonLayout() noexcept -> void;
+    auto setWindowConfig() noexcept -> void;
 
 protected:
     virtual auto mousePressEvent(QMouseEvent* _event) -> void;
@@ -43,13 +37,13 @@ protected:
     virtual auto mouseDoubleClickEvent(QMouseEvent* _event) -> void;
 
 private:
-    bool    m_mouseHandle{};
-    QPoint  m_mousePoint{};
-    quint16 m_height{};
-
     std::map<QString, QWidget*> m_widgetMaps{
-        {"minWindow", new QToolButton{this}},
-        {"normalWindow", new QToolButton{this}},
-        {"closeWindow", new QToolButton{this}},
+        {"NO1_minWindow", new QToolButton{this}},
+        {"NO2_normalWindow", new QToolButton{this}},
+        {"NO3_closeWindow", new QToolButton{this}},
     };
+
+    quint16         m_height{};
+    MoveWidget*     m_moveWidget{new MoveWidget{m_height, this}};
+    TitleBarButton* m_titleBarButton{new TitleBarButton{m_widgetMaps}};
 };
