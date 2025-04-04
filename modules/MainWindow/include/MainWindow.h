@@ -45,5 +45,5 @@ private:
 
     quint16         m_height{};
     MoveWidget*     m_moveWidget{new MoveWidget{m_height, this}};
-    TitleBarButton* m_titleBarButton{new TitleBarButton{m_widgetMaps}};
+    TitleBarButton* m_titleBarButton{new TitleBarButton{m_widgetMaps, ButtonSystemStyle::WIN, this}};
 };

@@ -1,8 +1,11 @@
 _Pragma("once");
+#include <QApplication>
 #include <QMouseEvent>
 #include <QObject>
 #include <QPoint>
+#include <QTimer>
 #include <QWidget>
+
 
 class MoveWidget : public QObject
 {

@@ -3,7 +3,7 @@ file(GLOB SOURCE_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
 )
 
-file(GLOB RESOURCES_LIST 
+file(GLOB RESOURCES_LIST
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/*.css
 )
@@ -13,7 +13,7 @@ set(MODEL_NAME MainWindow)
 add_library(${MODEL_NAME} STATIC)
 
 target_sources(
-    ${MODEL_NAME} 
+    ${MODEL_NAME}
     PRIVATE
     ${SOURCE_FILES}
 )
@@ -36,7 +36,7 @@ set_target_properties(${MODEL_NAME} PROPERTIES
 )
 
 target_include_directories(${MODEL_NAME}
-    PRIVATE
+    PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
