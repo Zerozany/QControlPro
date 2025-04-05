@@ -1,8 +1,8 @@
 add_subdirectory(${CMAKE_SOURCE_DIR}/views)
 
 file(GLOB SOURCE_FILES
-    ${CMAKE_SOURCE_DIR}/include/*.h
-    ${CMAKE_SOURCE_DIR}/src/*.cpp
+    ${CMAKE_SOURCE_DIR}/source/include/*.h
+    ${CMAKE_SOURCE_DIR}/source/src/*.cpp
 )
 
 file(GLOB RESOURCES_LIST
@@ -26,5 +26,5 @@ qt_add_resources(${PROJECT_NAME} "Main"
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/source/include
 )

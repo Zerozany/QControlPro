@@ -7,7 +7,7 @@ set(VCPKG_TARGET_TRIPLET "x64-windows" CACHE STRING "Static link dynamic call")
 project(QControlPro VERSION 1.0.0 LANGUAGES CXX)
 
 add_executable(${PROJECT_NAME}
-    ${PROJECT_SOURCE_DIR}/src/main.cpp
+    ${PROJECT_SOURCE_DIR}/source/src/main.cpp
 )
 
 include(${PROJECT_SOURCE_DIR}/cmakes/importQt.cmake)
