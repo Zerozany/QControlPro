@@ -1,7 +1,10 @@
 _Pragma("once");
+#include <QFile>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QToolButton>
 #include <QWidget>
+#include <ranges>
 
 class TitleWidget : public QLabel
 {
@@ -18,10 +21,35 @@ public:
     explicit(true) TitleWidget(QWidget* _widget, quint8 _height = 30, const SystemStyle& _systemStyle = SystemStyle::WIN, QWidget* _parent = nullptr);
     ~TitleWidget() = default;
 
-    auto setTitleConfig() noexcept -> void;
+    auto setButtonProperty(const char* _groupName = "propertyName", const QStringList& _propertyNames = {"min", "normal", "close"}) noexcept -> void;
+
+    auto setButtonStyle(const QString& _filePath) noexcept -> void;
 
 private:
-    QWidget*    m_widget{nullptr};
-    quint8      m_height{};
-    SystemStyle m_systemStyle{};
+    auto conncetSignalsToSlots() noexcept -> void;
+
+    auto setTitleConfig(QWidget* _parent) noexcept -> void;
+
+    auto setTitleButtonLayout() noexcept -> void;
+
+Q_SIGNALS:
+    auto buttonStyleChanged(const QString& _styleString) -> void;
+
+private Q_SLOTS:
+    auto readButtonStyle(const QString& _styleString) noexcept -> void;
+
+private:
+    QWidget*     m_widget{nullptr};
+    quint8       m_height{};
+    SystemStyle  m_systemStyle{};
+    QHBoxLayout* m_titleLayout{new QHBoxLayout{this}};
+
+    std::map<QString, QWidget*> m_titleButtons{
+        {"min", new QToolButton{this}},
+        {"normal", new QToolButton{this}},
+        {"close", new QToolButton{this}},
+    };
+
+private:
+    inline static constexpr quint8 BUTTONWIDTH{40};
 };

@@ -42,7 +42,7 @@ protected:
 
 private:
     quint8       m_titleHeight{Height}; /*标题栏高度*/
-    widgetsMap&  m_widgetsMap;          /*标题按钮集*/
+    widgetsMap&  m_widgetsMap;          /*控件集*/
     MouseHandle* m_mouseHandle{new MouseHandle{this}};
     TitleWidget* m_titleWidget{new TitleWidget{this, 30, TitleWidget::SystemStyle::WIN, this}};
 
