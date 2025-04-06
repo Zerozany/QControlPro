@@ -6,7 +6,7 @@ WidgetFrame::WidgetFrame(widgetsMap& _widgetsMap, QWidget* _parent)
     Q_ASSERT_X(this->m_widgetsMap.size() > 0, "WidgetFrame", "Arguments _widgetsMap is empty!");
     std::invoke(&WidgetFrame::conncetSignalsToSlots, this);
     std::invoke(&WidgetFrame::setWindowConfig, this);
-    m_titleWidget->setGeometry(1, 1, this->width() - 2, 30);
+    std::invoke(&WidgetFrame::setFrameLayout, this);
 }
 
 auto WidgetFrame::titleHeight() noexcept -> quint8
@@ -21,7 +21,7 @@ auto WidgetFrame::setTitleHeight(const quint8& _height) noexcept -> void
         return;
     }
     this->m_titleHeight = _height;
-    emit titleHeightChanged();
+    emit titleHeightChanged(this->m_titleHeight);
 }
 
 auto WidgetFrame::setWindowConfig() noexcept -> void
@@ -38,6 +38,19 @@ auto WidgetFrame::setWindowConfig() noexcept -> void
 
 auto WidgetFrame::conncetSignalsToSlots() noexcept -> void
 {
+    connect(this, &WidgetFrame::titleHeightChanged, m_mouseHandle, &MouseHandle::resetHeight, Qt::AutoConnection);
+    connect(this, &WidgetFrame::titleHeightChanged, m_titleWidget, &TitleWidget::resetHeight, Qt::AutoConnection);
+}
+
+auto WidgetFrame::setFrameLayout() noexcept -> void
+{
+    QHBoxLayout* titleLayout{new QHBoxLayout{}};
+    titleLayout->setContentsMargins(0, 0, 0, 0);
+    titleLayout->setSpacing(0);
+    titleLayout->addWidget(m_titleWidget);
+    m_globabLayout->setContentsMargins(0, 0, 0, 0);
+    m_globabLayout->addLayout(titleLayout, Qt::AlignTop);
+    m_globabLayout->addStretch();
 }
 
 auto WidgetFrame::paintEvent(QPaintEvent* _event) -> void
@@ -48,11 +61,12 @@ auto WidgetFrame::paintEvent(QPaintEvent* _event) -> void
     // 1. 绘制圆角背景
     QPainterPath path{};
     // 10px圆角
-    path.addRoundedRect(rect(), 10, 10);
+    path.addRoundedRect(this->rect(), 10, 10);
     // 填充背景色（替代样式表中的background-color）
     painter.fillPath(path, QColor("#FFFFFF"));
-    // 2. 绘制边框（替代样式表中的border）
-    painter.setPen(QPen(QColor("#CCCCCC"), 1));  // 1px灰色边框
+    // 2. 绘制边框（替代样式表中的border, 1px灰色边框
+    painter.setPen(QPen(QColor("#CCCCCC"), 1));
+
     painter.drawPath(path);
 }
 
@@ -64,6 +78,7 @@ auto WidgetFrame::mousePressEvent(QMouseEvent* _event) -> void
 auto WidgetFrame::mouseMoveEvent(QMouseEvent* _event) -> void
 {
     std::invoke(&MouseHandle::mouseMove, this->m_mouseHandle, _event);
+    std::invoke(&TitleWidget::setTitleStatus, this->m_titleWidget, this, _event);
 }
 
 auto WidgetFrame::mouseReleaseEvent(QMouseEvent* _event) -> void
@@ -73,4 +88,5 @@ auto WidgetFrame::mouseReleaseEvent(QMouseEvent* _event) -> void
 
 auto WidgetFrame::mouseDoubleClickEvent(QMouseEvent* _event) -> void
 {
+    std::invoke(&MouseHandle::mouseDoubleClick, this->m_mouseHandle, _event);
 }

@@ -1,34 +1,34 @@
-QToolButton[propertyName="min"] {
+QPushButton[propertyName="min"] {
     border: none;
     border-radius: 0px;
     background-color: transparent;
     padding: 0px;
 }
 
-QToolButton[propertyName="normal"] {
+QPushButton[propertyName="normal"] {
     border: none;
     border-radius: 0px;
     background-color: transparent;
     padding: 0px;
 }
 
-QToolButton[propertyName="min"]:hover {
+QPushButton[propertyName="min"]:hover {
     background-color: #DCDCDC;
 }
 
-QToolButton[propertyName="normal"]:hover {
+QPushButton[propertyName="normal"]:hover {
     background-color: #DCDCDC;
 }
 
-QToolButton[propertyName="min"]:pressed {
+QPushButton[propertyName="min"]:pressed {
     background-color: #848282;
 }
 
-QToolButton[propertyName="normal"]:pressed {
+QPushButton[propertyName="normal"]:pressed {
     background-color: #848282;
 }
 
-QToolButton[propertyName="close"] {
+QPushButton[propertyName="close"] {
     border: none;
     border-radius: 0px;
     border-top-right-radius: 8px;
@@ -36,10 +36,10 @@ QToolButton[propertyName="close"] {
     padding: 0px;
 }
 
-QToolButton[propertyName="close"]:hover {
+QPushButton[propertyName="close"]:hover {
     background-color: #f52c2c;
 }
 
-QToolButton[propertyName="close"]:pressed {
+QPushButton[propertyName="close"]:pressed {
     background-color: #f75d5d;
 }

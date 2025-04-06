@@ -1,18 +1,26 @@
 #include "MouseHandle.h"
 
-MouseHandle::MouseHandle(QWidget* _widget, QObject* _parent) : QObject{_parent}, m_widget{_widget}
+MouseHandle::MouseHandle(quint8 _height, QWidget* _widget, QObject* _parent)
+    : QObject{_parent}, m_height{_height}, m_widget{_widget}
 {
+    Q_ASSERT(m_height > 0);
     Q_ASSERT_X(m_widget != nullptr, "MouseHandle", "_widget is nullptr");
     std::invoke(&MouseHandle::conncetSignalsToSlots, this);
 }
 
 auto MouseHandle::mousePress(QMouseEvent* _event) noexcept -> void
 {
-    if (_event->button() == Qt::LeftButton && m_cursorType != CursorType::None)
+    if (_event->button() == Qt::LeftButton && !m_widget->isMaximized() && m_cursorType != CursorType::None)
     {
         m_resizing      = true;
         m_startPoint    = _event->globalPos();
         m_startGeometry = m_widget->geometry();
+    }
+
+    if ((_event->button() & Qt::LeftButton) && !this->getResizing() && QRect{0, 0, m_widget->width(), m_height}.contains(_event->pos()))
+    {
+        m_mouseHandle = true;
+        m_mousePoint  = _event->globalPos() - m_widget->pos();
     }
 }
 
@@ -80,16 +88,51 @@ auto MouseHandle::mouseMove(QMouseEvent* _event) noexcept -> void
     {
         this->setCursorType(_event->pos());
     }
+
+    if (m_mouseHandle)
+    {
+        if (m_widget->isMaximized()) [[Q_UNLIKELY]]
+        {
+            // 计算当前鼠标在窗口中的横向比例
+            float ratio_x{static_cast<float>(_event->pos().x()) / static_cast<float>(m_widget->width())};
+            // 记录当前鼠标全局坐标
+            QPoint current_globalpos{_event->globalPos()};
+            // 取消最大化
+            m_widget->showNormal();
+            // 计算鼠标应该对应的新窗口位置,保持垂直偏移不变
+            m_widget->move(current_globalpos - QPoint(static_cast<int>(ratio_x * m_widget->width()), m_mousePoint.y()));
+            // 更新鼠标拖动偏移
+            m_mousePoint.setX(current_globalpos.x() - m_widget->pos().x());
+            m_mousePoint.setY(m_height / 2);
+        }
+        else
+        {
+            m_widget->move(_event->globalPos() - m_mousePoint);
+        }
+    }
 }
 
 auto MouseHandle::mouseRelease(QMouseEvent* _event) noexcept -> void
 {
-    this->m_resizing = false;
+    this->m_resizing    = false;
+    this->m_mouseHandle = false;
 }
 
 auto MouseHandle::mouseleave(QEvent* _event) noexcept -> void
 {
     m_widget->setCursor(Qt::ArrowCursor);
+}
+
+auto MouseHandle::mouseDoubleClick(QMouseEvent* _event) noexcept -> void
+{
+    if (_event->button() == Qt::LeftButton)
+    {
+        if (QRect{0, 0, m_widget->width(), m_height}.contains(_event->pos()))
+        {
+            m_widget->isMaximized() ? m_widget->showNormal() : m_widget->showMaximized();
+            m_widget->setCursor(Qt::ArrowCursor);
+        }
+    }
 }
 
 auto MouseHandle::getResizing() noexcept -> bool
@@ -103,10 +146,10 @@ auto MouseHandle::setCursorType(const QPoint& _pos) noexcept -> void
     const int  y{_pos.y()};
     const int  w{m_widget->width()};
     const int  h{m_widget->height()};
-    const bool left{x < m_border_width};
-    const bool right{x > w - m_border_width};
-    const bool top{y < m_border_width};
-    const bool bottom{y > h - m_border_width};
+    const bool left{x < BORDER_LEFT_WIDTH};
+    const bool right{x > w - BORDER_RIGHT_WIDTH};
+    const bool top{y < BORDER_TOP_WIDTH};
+    const bool bottom{y > h - BORDER_BOTTOM_WIDTH};
     CursorType tmp{};
     if (top && left)
     {
@@ -157,8 +200,21 @@ auto MouseHandle::conncetSignalsToSlots() noexcept -> void
     connect(this, &MouseHandle::cursorTypeChanged, this, &MouseHandle::setCursor, Qt::AutoConnection);
 }
 
+auto MouseHandle::resetHeight(const quint8 _height) noexcept -> void
+{
+    if (m_height == _height)
+    {
+        return;
+    }
+    m_height = _height;
+}
+
 auto MouseHandle::setCursor() noexcept -> void
 {
+    if (m_widget->isMaximized())
+    {
+        return;
+    }
     switch (this->m_cursorType)
     {
         case CursorType::Top:

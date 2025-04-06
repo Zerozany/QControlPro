@@ -1,6 +1,8 @@
 _Pragma("once");
+#include <QHBoxLayout>
 #include <QPainter>
 #include <QPainterPath>
+#include <QVBoxLayout>
 #include <QWidget>
 #include <functional>
 #include <map>
@@ -21,6 +23,7 @@ public:
     ~WidgetFrame() = default;
 
     auto titleHeight() noexcept -> quint8;
+
     auto setTitleHeight(const quint8& _height) noexcept -> void;
 
 private:
@@ -28,8 +31,10 @@ private:
 
     auto conncetSignalsToSlots() noexcept -> void;
 
+    auto setFrameLayout() noexcept -> void;
+
 Q_SIGNALS:
-    auto titleHeightChanged() -> void;
+    auto titleHeightChanged(const quint8 _height) -> void;
 
 protected:
     virtual auto paintEvent(QPaintEvent* _event) -> void;
@@ -45,9 +50,10 @@ protected:
 private:
     quint8       m_titleHeight{Height}; /*标题栏高度*/
     widgetsMap&  m_widgetsMap;          /*控件集*/
-    MouseHandle* m_mouseHandle{new MouseHandle{this}};
-    TitleWidget* m_titleWidget{new TitleWidget{this, 30, TitleWidget::SystemStyle::WIN, this}};
+    QVBoxLayout* m_globabLayout{new QVBoxLayout{this}};
+    MouseHandle* m_mouseHandle{new MouseHandle{m_titleHeight, this}};
+    TitleWidget* m_titleWidget{new TitleWidget{m_titleHeight, this}};
 
 private:
-    inline static constexpr quint8 Height{30}; /*标题栏默认高度*/
+    inline static constexpr quint8 Height{TITLE_HEIGHT}; /*标题栏默认高度*/
 };
