@@ -26,6 +26,8 @@ public:
 private:
     auto setWindowConfig() noexcept -> void;
 
+    auto conncetSignalsToSlots() noexcept -> void;
+
 Q_SIGNALS:
     auto titleHeightChanged() -> void;
 

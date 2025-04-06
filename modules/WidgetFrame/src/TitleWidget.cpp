@@ -3,11 +3,12 @@
 TitleWidget::TitleWidget(QWidget* _widget, quint8 _height, const SystemStyle& _systemStyle, QWidget* _parent)
     : QLabel{_parent}, m_widget{_widget}, m_height{_height}, m_systemStyle{_systemStyle}
 {
+    // this->setStyleSheet("background:blue;");
     std::invoke(&TitleWidget::conncetSignalsToSlots, this);
     std::invoke(&TitleWidget::setTitleConfig, this, _parent);
     std::invoke([this] { setButtonProperty(); });
     std::invoke(&TitleWidget::setTitleButtonLayout, this);
-    std::invoke(&TitleWidget::setButtonStyle, this, R"(:/resources/QToolButton.css)");
+    std::invoke(&TitleWidget::setButtonStyle, this, R"(:/resources/css/QToolButton.css)");
 }
 
 auto TitleWidget::conncetSignalsToSlots() noexcept -> void
@@ -18,7 +19,8 @@ auto TitleWidget::conncetSignalsToSlots() noexcept -> void
 auto TitleWidget::setTitleConfig(QWidget* _parent) noexcept -> void
 {
     this->setParent(_parent);
-    // this->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+    /// @brief 开启鼠标活动监听
+    this->setMouseTracking(true);
 }
 
 auto TitleWidget::setButtonProperty(const char* _groupName, const QStringList& _propertyNames) noexcept -> void
@@ -58,7 +60,7 @@ auto TitleWidget::setTitleButtonLayout() noexcept -> void
 
 auto TitleWidget::readButtonStyle(const QString& _styleString) noexcept -> void
 {
-    for (auto&& buttons : m_titleButtons | std::views::values)
+    for (auto& buttons : m_titleButtons | std::views::values)
     {
         buttons->setStyleSheet(_styleString);
     }

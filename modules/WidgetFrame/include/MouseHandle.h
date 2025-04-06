@@ -3,6 +3,8 @@ _Pragma("once");
 #include <QPoint>
 #include <QWidget>
 
+#include "GlobalGeneral.h"
+
 class MouseHandle : public QObject
 {
     Q_OBJECT
@@ -53,5 +55,5 @@ private:
     CursorType m_cursorType{};    /*指针图标类型*/
 
 private:
-    inline static constexpr quint8 m_border_width{5}; /*边缘感应宽度*/
+    inline static constexpr quint8 m_border_width{BORDERWIDTH}; /*边缘感应宽度*/
 };

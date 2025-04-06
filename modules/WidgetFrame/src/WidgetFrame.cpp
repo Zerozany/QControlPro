@@ -4,8 +4,9 @@ WidgetFrame::WidgetFrame(widgetsMap& _widgetsMap, QWidget* _parent)
     : QWidget{_parent}, m_widgetsMap{_widgetsMap}
 {
     Q_ASSERT_X(this->m_widgetsMap.size() > 0, "WidgetFrame", "Arguments _widgetsMap is empty!");
+    std::invoke(&WidgetFrame::conncetSignalsToSlots, this);
     std::invoke(&WidgetFrame::setWindowConfig, this);
-    m_titleWidget->setGeometry(0, 0, this->width(), 30);
+    m_titleWidget->setGeometry(1, 1, this->width() - 2, 30);
 }
 
 auto WidgetFrame::titleHeight() noexcept -> quint8
@@ -33,6 +34,10 @@ auto WidgetFrame::setWindowConfig() noexcept -> void
     this->setAttribute(Qt::WA_TranslucentBackground, true);
     /// @brief 设置基础大小
     this->setBaseSize(800, 600);
+}
+
+auto WidgetFrame::conncetSignalsToSlots() noexcept -> void
+{
 }
 
 auto WidgetFrame::paintEvent(QPaintEvent* _event) -> void

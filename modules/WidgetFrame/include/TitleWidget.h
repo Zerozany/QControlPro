@@ -2,9 +2,12 @@ _Pragma("once");
 #include <QFile>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QMouseEvent>
 #include <QToolButton>
 #include <QWidget>
 #include <ranges>
+
+#include "GlobalGeneral.h"
 
 class TitleWidget : public QLabel
 {
@@ -24,6 +27,8 @@ public:
     auto setButtonProperty(const char* _groupName = "propertyName", const QStringList& _propertyNames = {"min", "normal", "close"}) noexcept -> void;
 
     auto setButtonStyle(const QString& _filePath) noexcept -> void;
+
+    // auto setButtonIcons(const QString& _filePath) noexcept -> void;
 
 private:
     auto conncetSignalsToSlots() noexcept -> void;
@@ -52,4 +57,5 @@ private:
 
 private:
     inline static constexpr quint8 BUTTONWIDTH{40};
+    inline static constexpr quint8 m_border_width{BORDERWIDTH}; /*边缘感应宽度*/
 };
