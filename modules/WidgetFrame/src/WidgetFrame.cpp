@@ -38,8 +38,9 @@ auto WidgetFrame::setWindowConfig() noexcept -> void
 
 auto WidgetFrame::conncetSignalsToSlots() noexcept -> void
 {
-    connect(this, &WidgetFrame::titleHeightChanged, m_mouseHandle, &MouseHandle::resetHeight, Qt::AutoConnection);
-    connect(this, &WidgetFrame::titleHeightChanged, m_titleWidget, &TitleWidget::resetHeight, Qt::AutoConnection);
+    connect(this, &WidgetFrame::titleHeightChanged, m_mouseHandle, &MouseHandle::resetHeight, Qt::QueuedConnection);
+    connect(this, &WidgetFrame::titleHeightChanged, m_titleWidget, &TitleWidget::resetHeight, Qt::QueuedConnection);
+    connect(m_mouseHandle, &MouseHandle::resizeWidget, m_titleWidget, &TitleWidget::setTitleStatus, Qt::DirectConnection);
 }
 
 auto WidgetFrame::setFrameLayout() noexcept -> void
@@ -78,7 +79,6 @@ auto WidgetFrame::mousePressEvent(QMouseEvent* _event) -> void
 auto WidgetFrame::mouseMoveEvent(QMouseEvent* _event) -> void
 {
     std::invoke(&MouseHandle::mouseMove, this->m_mouseHandle, _event);
-    std::invoke(&TitleWidget::setTitleStatus, this->m_titleWidget, this, _event);
 }
 
 auto WidgetFrame::mouseReleaseEvent(QMouseEvent* _event) -> void

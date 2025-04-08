@@ -1,9 +1,11 @@
 _Pragma("once");
+#include <QApplication>
 #include <QMouseEvent>
 #include <QPoint>
+#include <QScreen>
 #include <QWidget>
 
-#include "GlobalGeneral.h"
+#include "Threshold.h"
 
 class MouseHandle : public QObject
 {
@@ -36,6 +38,7 @@ public:
 
     auto mouseleave(QEvent* _event) noexcept -> void;
 
+    /// @brief 获取窗口是否正在进行伸缩状态
     auto getResizing() noexcept -> bool;
 
 private:
@@ -46,6 +49,8 @@ private:
 Q_SIGNALS:
     auto cursorTypeChanged() -> void;
 
+    auto resizeWidget(const bool _flag) -> void;
+
 private Q_SLOTS:
     auto setCursor() noexcept -> void;
 
@@ -55,10 +60,8 @@ public Q_SLOTS:
 private:
     QWidget*   m_widget{nullptr};
     quint8     m_height{};
-    bool       m_resizing{false}; /*窗口伸缩句柄*/
-    QPoint     m_startPoint{};    /*开启伸缩标记点*/
-    QRect      m_startGeometry{}; /*当前窗口大小缓存区*/
-    CursorType m_cursorType{};    /*指针图标类型*/
-    bool       m_mouseHandle{};   /*鼠标移动窗口句柄*/
-    QPoint     m_mousePoint{};    /*窗口移动事件鼠标缓存点*/
+    bool       m_resizing{false};                          /*窗口伸缩句柄*/
+    CursorType m_cursorType{};                             /*指针图标类型*/
+    bool       m_mouseHandle{};                            /*鼠标移动窗口句柄*/
+    QScreen*   m_screen{QGuiApplication::primaryScreen()}; /*获取主屏幕*/
 };

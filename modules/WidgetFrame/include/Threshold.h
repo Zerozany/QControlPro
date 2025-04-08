@@ -19,3 +19,7 @@ _Pragma("once");
 #ifndef BORDER_RIGHT_WIDTH
 #define BORDER_RIGHT_WIDTH 5
 #endif
+
+#ifndef CORNER_SIZE
+#define CORNER_SIZE 7
+#endif

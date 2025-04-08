@@ -7,11 +7,15 @@ _Pragma("once");
 #include <QWidget>
 #include <ranges>
 
-#include "GlobalGeneral.h"
+#include "Threshold.h"
+
+class WidgetFrame;
 
 class TitleWidget : public QLabel
 {
     Q_OBJECT
+    friend class WidgetFrame;
+
 public:
     enum struct SystemStyle : std::uint8_t
     {
@@ -24,20 +28,18 @@ public:
     explicit(true) TitleWidget(quint8 _height, QWidget* _parent = nullptr, const SystemStyle& _systemStyle = SystemStyle::WIN);
     ~TitleWidget() = default;
 
-    auto setButtonProperty(const char* _groupName = "propertyName", const QStringList& _propertyNames = {"min", "normal", "close"}) noexcept -> void;
-
-    auto setButtonStyle(const QString& _filePath) noexcept -> void;
-
-    auto setButtonIcons(const QStringList& _filePath, const QSize& _size = QSize{12, 12}) noexcept -> void;
-
-    auto setTitleStatus(QWidget* _parent, QMouseEvent* _event) noexcept -> void;
-
 private:
     auto conncetSignalsToSlots() noexcept -> void;
 
     auto setTitleConfig(QWidget* _parent) noexcept -> void;
 
     auto setTitleButtonLayout() noexcept -> void;
+
+    auto setButtonProperty(const char* _groupName = "propertyName", const QStringList& _propertyNames = {"min", "normal", "close"}) noexcept -> void;
+
+    auto setButtonStyle(const QString& _filePath) noexcept -> void;
+
+    auto setButtonIcons(const QStringList& _filePath, const QSize& _size = QSize{12, 12}) noexcept -> void;
 
 Q_SIGNALS:
     auto buttonStyleChanged(const QString& _styleString) -> void;
@@ -47,6 +49,8 @@ private Q_SLOTS:
 
 public Q_SLOTS:
     auto resetHeight(const quint8 _height) noexcept -> void;
+
+    auto setTitleStatus(const bool _flag) noexcept -> void;
 
 private:
     QWidget*     m_widget{nullptr};

@@ -1,13 +1,17 @@
 #include "TitleWidget.h"
 
+#include <QApplication>
+
+#include "WidgetFrame.h"
+
 TitleWidget::TitleWidget(quint8 _height, QWidget* _parent, const SystemStyle& _systemStyle)
     : m_widget{_parent}, m_height{_height}, m_systemStyle{_systemStyle}
 {
     // this->setStyleSheet("background:blue;");
     Q_ASSERT(_parent != nullptr);
     Q_ASSERT(m_height > 0);
-    std::invoke(&TitleWidget::conncetSignalsToSlots, this);
     std::invoke(&TitleWidget::setTitleConfig, this, _parent);
+    std::invoke(&TitleWidget::conncetSignalsToSlots, this);
     std::invoke([this] { this->setButtonProperty(); });
     std::invoke([this] { this->setButtonIcons(QStringList{R"(:/resources/icons/minimize.png)", R"(:/resources/icons/maximize.png)", R"(:/resources/icons/revert.png)", R"(:/resources/icons/close.png)"}); });
     std::invoke(&TitleWidget::setButtonStyle, this, R"(:/resources/css/QToolButton.css)");
@@ -68,35 +72,6 @@ auto TitleWidget::setButtonIcons(const QStringList& _filePath, const QSize& _siz
     qobject_cast<QPushButton*>(m_titleButtons.at("close"))->setIconSize(_size);
 }
 
-auto TitleWidget::setTitleStatus(QWidget* _parent, QMouseEvent* _event) noexcept -> void
-{
-    if (_parent == nullptr)
-    {
-        qWarning() << "_parent is nullptr";
-        return;
-    }
-    if (m_widget->isMaximized())
-    {
-        return;
-    }
-    if (QRect{0, 0, _parent->width(), BORDER_TOP_WIDTH}.contains(_event->pos()))
-    {
-        this->setAttribute(Qt::WA_TransparentForMouseEvents, true);
-    }
-    else if (QRect{0, 0, BORDER_LEFT_WIDTH, m_height}.contains(_event->pos()))
-    {
-        this->setAttribute(Qt::WA_TransparentForMouseEvents, true);
-    }
-    else if (QRect{this->width() - BORDER_RIGHT_WIDTH, 0, BORDER_RIGHT_WIDTH, m_height}.contains(_event->pos()))
-    {
-        this->setAttribute(Qt::WA_TransparentForMouseEvents, true);
-    }
-    else
-    {
-        this->setAttribute(Qt::WA_TransparentForMouseEvents, false);
-    }
-}
-
 auto TitleWidget::setTitleButtonLayout() noexcept -> void
 {
     for (auto& button : m_titleButtons | std::views::values)
@@ -111,17 +86,31 @@ auto TitleWidget::setTitleButtonLayout() noexcept -> void
     m_titleLayout->addWidget(m_titleButtons.at("close"), Qt::AlignTop);
 }
 
+auto TitleWidget::setTitleStatus(const bool _flag) noexcept -> void
+{
+    if (_flag)
+    {
+        QEvent leaveEvent(QEvent::Leave);
+        for (auto& button : m_titleButtons | std::views::values)
+        {
+            QApplication::sendEvent(button, &leaveEvent);
+            button->update();
+        }
+    }
+    this->setAttribute(Qt::WA_TransparentForMouseEvents, _flag);
+}
+
 auto TitleWidget::readButtonStyle(const QString& _styleString) noexcept -> void
 {
-    for (auto& buttons : m_titleButtons | std::views::values)
+    for (auto& button : m_titleButtons | std::views::values)
     {
-        buttons->setStyleSheet(_styleString);
+        button->setStyleSheet(_styleString);
     }
 }
 
 auto TitleWidget::resetHeight(const quint8 _height) noexcept -> void
 {
-    if (m_height == _height)
+    if (m_height == _height && m_height == 0)
     {
         return;
     }

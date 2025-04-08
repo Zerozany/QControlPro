@@ -1,5 +1,10 @@
 #include "MouseHandle.h"
 
+constinit static QRect  g_startGeometry{};   /*当前窗口大小缓存区域*/
+constinit static QPoint g_startPoint{};      /*开启伸缩标记点*/
+constinit static QPoint g_tmpPoint{};        /*窗口移动事件鼠标缓存点*/
+constinit static bool   g_topClicked{false}; /*顶部伸缩指针点击上下伸缩事件*/
+
 MouseHandle::MouseHandle(quint8 _height, QWidget* _widget, QObject* _parent)
     : QObject{_parent}, m_height{_height}, m_widget{_widget}
 {
@@ -10,25 +15,25 @@ MouseHandle::MouseHandle(quint8 _height, QWidget* _widget, QObject* _parent)
 
 auto MouseHandle::mousePress(QMouseEvent* _event) noexcept -> void
 {
-    if (_event->button() == Qt::LeftButton && !m_widget->isMaximized() && m_cursorType != CursorType::None)
+    if ((_event->button() & Qt::LeftButton) && !m_widget->isMaximized() && m_cursorType != CursorType::None)
     {
         m_resizing      = true;
-        m_startPoint    = _event->globalPos();
-        m_startGeometry = m_widget->geometry();
+        g_startPoint    = _event->globalPos();
+        g_startGeometry = m_widget->geometry();
     }
 
     if ((_event->button() & Qt::LeftButton) && !this->getResizing() && QRect{0, 0, m_widget->width(), m_height}.contains(_event->pos()))
     {
         m_mouseHandle = true;
-        m_mousePoint  = _event->globalPos() - m_widget->pos();
+        g_tmpPoint    = _event->globalPos() - m_widget->pos();
     }
 }
 
 auto MouseHandle::mouseMove(QMouseEvent* _event) noexcept -> void
 {
-    if (QRect end_geometry{m_startGeometry}; m_resizing)
+    if (QRect end_geometry{g_startGeometry}; m_resizing)
     {
-        switch (QPoint tmp_point{_event->globalPos() - m_startPoint}; m_cursorType)
+        switch (QPoint tmp_point{_event->globalPos() - g_startPoint}; m_cursorType)
         {
             case CursorType::Top:
             {
@@ -100,14 +105,19 @@ auto MouseHandle::mouseMove(QMouseEvent* _event) noexcept -> void
             // 取消最大化
             m_widget->showNormal();
             // 计算鼠标应该对应的新窗口位置,保持垂直偏移不变
-            m_widget->move(current_globalpos - QPoint(static_cast<int>(ratio_x * m_widget->width()), m_mousePoint.y()));
+            m_widget->move(current_globalpos - QPoint(static_cast<int>(ratio_x * m_widget->width()), g_tmpPoint.y()));
             // 更新鼠标拖动偏移
-            m_mousePoint.setX(current_globalpos.x() - m_widget->pos().x());
-            m_mousePoint.setY(m_height / 2);
+            g_tmpPoint.setX(current_globalpos.x() - m_widget->pos().x());
+            g_tmpPoint.setY(m_height / 2);
+        }
+        else if (g_topClicked)
+        {
+            m_widget->resize(m_widget->width(), m_screen->availableGeometry().height() / 2);
+            g_topClicked = false;
         }
         else
         {
-            m_widget->move(_event->globalPos() - m_mousePoint);
+            m_widget->move(_event->globalPos() - g_tmpPoint);
         }
     }
 }
@@ -127,10 +137,16 @@ auto MouseHandle::mouseDoubleClick(QMouseEvent* _event) noexcept -> void
 {
     if (_event->button() == Qt::LeftButton)
     {
-        if (QRect{0, 0, m_widget->width(), m_height}.contains(_event->pos()))
+        if (QRect{0, 0, m_widget->width(), m_height}.contains(_event->pos()) && m_cursorType == CursorType::None)
         {
             m_widget->isMaximized() ? m_widget->showNormal() : m_widget->showMaximized();
-            m_widget->setCursor(Qt::ArrowCursor);
+        }
+        if (m_cursorType == CursorType::Top || m_cursorType == CursorType::Bottom)
+        {
+            m_widget->move(m_widget->x(), 0);
+            // 返回扣除任务栏后的可用区域
+            m_widget->resize(m_widget->width(), m_screen->availableGeometry().height());
+            g_topClicked = true;
         }
     }
 }
@@ -142,28 +158,34 @@ auto MouseHandle::getResizing() noexcept -> bool
 
 auto MouseHandle::setCursorType(const QPoint& _pos) noexcept -> void
 {
-    const int  x{_pos.x()};
-    const int  y{_pos.y()};
-    const int  w{m_widget->width()};
-    const int  h{m_widget->height()};
-    const bool left{x < BORDER_LEFT_WIDTH};
-    const bool right{x > w - BORDER_RIGHT_WIDTH};
-    const bool top{y < BORDER_TOP_WIDTH};
-    const bool bottom{y > h - BORDER_BOTTOM_WIDTH};
+    const int x{_pos.x()};
+    const int y{_pos.y()};
+    const int w{m_widget->width()};
+    const int h{m_widget->height()};
+    // 判断是否在角落（使用更大的 CORNER_SIZE）
+    const bool topLeft{(x < CORNER_SIZE && y < CORNER_SIZE)};
+    const bool topRight{(x > w - CORNER_SIZE && y < CORNER_SIZE)};
+    const bool bottomLeft{(x < CORNER_SIZE && y > h - CORNER_SIZE)};
+    const bool bottomRight{(x > w - CORNER_SIZE && y > h - CORNER_SIZE)};
+    // 判断是否在边缘（使用较小的 BORDER_*_WIDTH）
+    const bool left{(x < BORDER_LEFT_WIDTH) && !topLeft && !bottomLeft};
+    const bool right{(x > w - BORDER_RIGHT_WIDTH) && !topRight && !bottomRight};
+    const bool top{(y < BORDER_TOP_WIDTH) && !topLeft && !topRight};
+    const bool bottom{(y > h - BORDER_BOTTOM_WIDTH) && !bottomLeft && !bottomRight};
     CursorType tmp{};
-    if (top && left)
+    if (topLeft)
     {
         tmp = CursorType::TopLeft;
     }
-    else if (top && right)
+    else if (topRight)
     {
         tmp = CursorType::TopRight;
     }
-    else if (bottom && left)
+    else if (bottomLeft)
     {
         tmp = CursorType::BottomLeft;
     }
-    else if (bottom && right)
+    else if (bottomRight)
     {
         tmp = CursorType::BottomRight;
     }
@@ -193,6 +215,14 @@ auto MouseHandle::setCursorType(const QPoint& _pos) noexcept -> void
     }
     this->m_cursorType = tmp;
     emit cursorTypeChanged();
+    if (this->m_cursorType == CursorType::None)
+    {
+        emit resizeWidget(false);
+    }
+    else
+    {
+        emit resizeWidget(true);
+    }
 }
 
 auto MouseHandle::conncetSignalsToSlots() noexcept -> void
@@ -202,7 +232,7 @@ auto MouseHandle::conncetSignalsToSlots() noexcept -> void
 
 auto MouseHandle::resetHeight(const quint8 _height) noexcept -> void
 {
-    if (m_height == _height)
+    if (m_height == _height && m_height == 0)
     {
         return;
     }
