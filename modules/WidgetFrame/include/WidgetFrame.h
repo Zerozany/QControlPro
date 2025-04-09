@@ -1,14 +1,12 @@
 _Pragma("once");
-#include <QHBoxLayout>
-#include <QPainter>
-#include <QPainterPath>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <functional>
 #include <map>
 
-#include "MouseHandle.h"
-#include "TitleWidget.h"
+#include "Threshold.h"
+
+class MouseHandle;
+class TitleWidget;
 
 class WidgetFrame : public QWidget
 {
@@ -22,9 +20,13 @@ public:
     explicit(true) WidgetFrame(widgetsMap& _widgetsMap, QWidget* _parent = nullptr);
     ~WidgetFrame() = default;
 
+    auto setWindowTitle(const QString& _title) -> void = delete;
+
     auto titleHeight() noexcept -> quint8;
 
     auto setTitleHeight(const quint8& _height) noexcept -> void;
+
+    auto setLayout(QLayout* _layout) noexcept -> void;
 
 private:
     auto setWindowConfig() noexcept -> void;
@@ -48,11 +50,11 @@ protected:
     virtual auto mouseDoubleClickEvent(QMouseEvent* _event) -> void;
 
 private:
+    QVBoxLayout* m_globabLayout{new QVBoxLayout{this}};
     quint8       m_titleHeight{Height}; /*标题栏高度*/
     widgetsMap&  m_widgetsMap;          /*控件集*/
-    QVBoxLayout* m_globabLayout{new QVBoxLayout{this}};
-    MouseHandle* m_mouseHandle{new MouseHandle{m_titleHeight, this}};
-    TitleWidget* m_titleWidget{new TitleWidget{m_titleHeight, this}};
+    MouseHandle* m_mouseHandle{};
+    TitleWidget* m_titleWidget{};
 
 private:
     inline static constexpr quint8 Height{TITLE_HEIGHT}; /*标题栏默认高度*/

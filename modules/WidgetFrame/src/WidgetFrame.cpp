@@ -1,12 +1,20 @@
 #include "WidgetFrame.h"
 
+#include <QHBoxLayout>
+#include <QPainter>
+#include <QPainterPath>
+#include <functional>
+
+#include "MouseHandle.h"
+#include "TitleWidget.h"
+
 WidgetFrame::WidgetFrame(widgetsMap& _widgetsMap, QWidget* _parent)
     : QWidget{_parent}, m_widgetsMap{_widgetsMap}
 {
     Q_ASSERT_X(this->m_widgetsMap.size() > 0, "WidgetFrame", "Arguments _widgetsMap is empty!");
-    std::invoke(&WidgetFrame::conncetSignalsToSlots, this);
     std::invoke(&WidgetFrame::setWindowConfig, this);
     std::invoke(&WidgetFrame::setFrameLayout, this);
+    std::invoke(&WidgetFrame::conncetSignalsToSlots, this);
 }
 
 auto WidgetFrame::titleHeight() noexcept -> quint8
@@ -21,7 +29,16 @@ auto WidgetFrame::setTitleHeight(const quint8& _height) noexcept -> void
         return;
     }
     this->m_titleHeight = _height;
-    emit titleHeightChanged(this->m_titleHeight);
+    emit titleHeightChanged(this->titleHeight());
+}
+
+auto WidgetFrame::setLayout(QLayout* _layout) noexcept -> void
+{
+    if (m_globabLayout->count() >= 2)
+    {
+        delete m_globabLayout->takeAt(m_globabLayout->count() - 1);
+    }
+    m_globabLayout->addLayout(_layout);
 }
 
 auto WidgetFrame::setWindowConfig() noexcept -> void
@@ -29,11 +46,14 @@ auto WidgetFrame::setWindowConfig() noexcept -> void
     /// @brief 开启鼠标活动监听
     this->setMouseTracking(true);
     /// @brief 移除窗口的系统默认边框和标题栏
-    this->setWindowFlags(Qt::FramelessWindowHint);
+    this->setWindowFlags(Qt::FramelessWindowHint | Qt::Window);
     /// @brief 设置窗口背景完全透明
     this->setAttribute(Qt::WA_TranslucentBackground, true);
     /// @brief 设置基础大小
     this->setBaseSize(800, 600);
+
+    m_mouseHandle = new MouseHandle{m_titleHeight, this};
+    m_titleWidget = new TitleWidget{m_titleHeight, this};
 }
 
 auto WidgetFrame::conncetSignalsToSlots() noexcept -> void

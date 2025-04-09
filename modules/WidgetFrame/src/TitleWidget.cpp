@@ -1,8 +1,12 @@
 #include "TitleWidget.h"
 
 #include <QApplication>
+#include <QFile>
+#include <ranges>
 
-#include "WidgetFrame.h"
+#ifndef BUTTONSCSSPATH
+#define BUTTONSCSSPATH R"(:/resources/css/QToolButton.css)"
+#endif
 
 TitleWidget::TitleWidget(quint8 _height, QWidget* _parent, const SystemStyle& _systemStyle)
     : m_widget{_parent}, m_height{_height}, m_systemStyle{_systemStyle}
@@ -10,25 +14,46 @@ TitleWidget::TitleWidget(quint8 _height, QWidget* _parent, const SystemStyle& _s
     // this->setStyleSheet("background:blue;");
     Q_ASSERT(_parent != nullptr);
     Q_ASSERT(m_height > 0);
-    std::invoke(&TitleWidget::setTitleConfig, this, _parent);
     std::invoke(&TitleWidget::conncetSignalsToSlots, this);
-    std::invoke([this] { this->setButtonProperty(); });
-    std::invoke([this] { this->setButtonIcons(QStringList{R"(:/resources/icons/minimize.png)", R"(:/resources/icons/maximize.png)", R"(:/resources/icons/revert.png)", R"(:/resources/icons/close.png)"}); });
-    std::invoke(&TitleWidget::setButtonStyle, this, R"(:/resources/css/QToolButton.css)");
     std::invoke(&TitleWidget::setTitleButtonLayout, this);
+    std::invoke(&TitleWidget::setTitleConfig, this, _parent);
 }
 
 auto TitleWidget::conncetSignalsToSlots() noexcept -> void
 {
-    connect(this, &TitleWidget::buttonStyleChanged, this, &TitleWidget::readButtonStyle, Qt::AutoConnection);
+    connect(this, &TitleWidget::buttonPropertyChanged, this, &TitleWidget::setButtonProperty, Qt::AutoConnection);
+    connect(this, &TitleWidget::buttonStyleChanged, this, &TitleWidget::setButtonStyle, Qt::AutoConnection);
+    connect(this, &TitleWidget::buttonIconsChanged, this, &TitleWidget::setButtonIcons, Qt::AutoConnection);
 }
 
 auto TitleWidget::setTitleConfig(QWidget* _parent) noexcept -> void
 {
+    QStringList __buttonPropertyList{
+        "min",
+        "normal",
+        "close",
+    };
+
+    QStringList __buttonIconList{
+        R"(:/resources/icons/minimize.png)",
+        R"(:/resources/icons/maximize.png)",
+        R"(:/resources/icons/revert.png)",
+        R"(:/resources/icons/close.png)",
+    };
+
+    constexpr const char* __propertyName{
+        "propertyName",
+    };
+
+    QSize __buttonIconSize{12, 12};
+
     this->setParent(_parent);
     this->setMouseTracking(true);
     this->setFixedHeight(m_height);
     this->setContentsMargins(0, 0, 0, 0);
+    Q_EMIT buttonPropertyChanged(__propertyName, __buttonPropertyList);
+    Q_EMIT buttonStyleChanged(BUTTONSCSSPATH);
+    Q_EMIT buttonIconsChanged(__buttonIconList, __buttonIconSize);
 }
 
 auto TitleWidget::setButtonProperty(const char* _groupName, const QStringList& _propertyNames) noexcept -> void
@@ -45,16 +70,19 @@ auto TitleWidget::setButtonProperty(const char* _groupName, const QStringList& _
 
 auto TitleWidget::setButtonStyle(const QString& _filePath) noexcept -> void
 {
-    QFile filePath{_filePath};
-    if (!filePath.open(QIODevice::ReadOnly | QIODevice::Text))
+    QFile styleFile{_filePath};
+    if (!styleFile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         qWarning() << "Failed to open style file:" << _filePath;
         return;
     }
-    QTextStream textStream{&filePath};
+    QTextStream textStream{&styleFile};
     QString     styleSheet{textStream.readAll()};
-    filePath.close();
-    emit buttonStyleChanged(styleSheet);
+    styleFile.close();
+    for (auto& button : m_titleButtons | std::views::values)
+    {
+        qobject_cast<QPushButton*>(button)->setStyleSheet(styleSheet);
+    }
 }
 
 auto TitleWidget::setButtonIcons(const QStringList& _filePath, const QSize& _size) noexcept -> void
@@ -67,9 +95,10 @@ auto TitleWidget::setButtonIcons(const QStringList& _filePath, const QSize& _siz
     qobject_cast<QPushButton*>(m_titleButtons.at("min"))->setIcon(QIcon{_filePath.at(0)});
     qobject_cast<QPushButton*>(m_titleButtons.at("normal"))->setIcon(QIcon{_filePath.at(1)});
     qobject_cast<QPushButton*>(m_titleButtons.at("close"))->setIcon(QIcon{_filePath.at(3)});
-    qobject_cast<QPushButton*>(m_titleButtons.at("min"))->setIconSize(_size);
-    qobject_cast<QPushButton*>(m_titleButtons.at("normal"))->setIconSize(_size);
-    qobject_cast<QPushButton*>(m_titleButtons.at("close"))->setIconSize(_size);
+    for (auto& button : m_titleButtons | std::views::values)
+    {
+        qobject_cast<QPushButton*>(button)->setIconSize(_size);
+    }
 }
 
 auto TitleWidget::setTitleButtonLayout() noexcept -> void
@@ -98,14 +127,6 @@ auto TitleWidget::setTitleStatus(const bool _flag) noexcept -> void
         }
     }
     this->setAttribute(Qt::WA_TransparentForMouseEvents, _flag);
-}
-
-auto TitleWidget::readButtonStyle(const QString& _styleString) noexcept -> void
-{
-    for (auto& button : m_titleButtons | std::views::values)
-    {
-        button->setStyleSheet(_styleString);
-    }
 }
 
 auto TitleWidget::resetHeight(const quint8 _height) noexcept -> void

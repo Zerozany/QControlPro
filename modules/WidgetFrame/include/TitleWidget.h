@@ -1,20 +1,15 @@
 _Pragma("once");
-#include <QFile>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMouseEvent>
 #include <QPushButton>
 #include <QWidget>
-#include <ranges>
 
 #include "Threshold.h"
-
-class WidgetFrame;
 
 class TitleWidget : public QLabel
 {
     Q_OBJECT
-    friend class WidgetFrame;
 
 public:
     enum struct SystemStyle : std::uint8_t
@@ -35,17 +30,19 @@ private:
 
     auto setTitleButtonLayout() noexcept -> void;
 
-    auto setButtonProperty(const char* _groupName = "propertyName", const QStringList& _propertyNames = {"min", "normal", "close"}) noexcept -> void;
-
-    auto setButtonStyle(const QString& _filePath) noexcept -> void;
-
-    auto setButtonIcons(const QStringList& _filePath, const QSize& _size = QSize{12, 12}) noexcept -> void;
-
 Q_SIGNALS:
-    auto buttonStyleChanged(const QString& _styleString) -> void;
+    auto buttonStyleChanged(const QString& _filePath) -> void;
+
+    auto buttonPropertyChanged(const char* _groupName, const QStringList& _propertyNames) -> void;
+
+    auto buttonIconsChanged(const QStringList& _filePath, const QSize& _size) -> void;
 
 private Q_SLOTS:
-    auto readButtonStyle(const QString& _styleString) noexcept -> void;
+    auto setButtonStyle(const QString& _filePath) noexcept -> void;
+
+    auto setButtonProperty(const char* _groupName, const QStringList& _propertyNames) noexcept -> void;
+
+    auto setButtonIcons(const QStringList& _filePath, const QSize& _size) noexcept -> void;
 
 public Q_SLOTS:
     auto resetHeight(const quint8 _height) noexcept -> void;
